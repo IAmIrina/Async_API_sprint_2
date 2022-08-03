@@ -1,6 +1,9 @@
+# Ревью кода
+Задача не выполнена, т.к. нет кода написаного тимэйтом.
+
 # Ссылка не репозиторий
 
-[snesterkov](https://github.com/snesterkov/Async_API_sprint_1)
+[IAmIrina](https://github.com/IAmIrina/Async_API_sprint_2.git)
 
 # Документация
 
