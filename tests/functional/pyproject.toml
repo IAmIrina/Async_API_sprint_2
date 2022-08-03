@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "tests_fasta[i_movies"
+version = "0.1.0"
+description = ""
+authors = ["IAmIrina <irina.vl.kiseleva@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pytest = "6.1.2"
+aiohttp = "3.7.2"
+elasticsearch = {version = "7.17.4", extras = ["async"]}
+pydantic = "1.9.0"
+pytest-asyncio = "^0.19.0"
+aioredis = "^2.0.1"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+autopep8 = "^1.6.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

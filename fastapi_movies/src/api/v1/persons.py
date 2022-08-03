@@ -1,0 +1,68 @@
+"""Route persons."""
+from http import HTTPStatus
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from services.person import PersonService, get_person_service
+from models.person import Person, Persons, Movies
+from core.messages import PERSON_NOT_FOUND
+
+
+router = APIRouter()
+
+
+@router.get('/',
+            response_model=Persons,
+            summary='Get persons.',
+            description='Return list of persons.')
+async def all_persons(
+        page_num: int = Query(default=1, ge=1, alias='page[number]', description='Page number.'),
+        page_size: int = Query(default=50, ge=1, le=100, alias='page[size]', description='Page size.'),
+        person_service: PersonService = Depends(get_person_service),
+) -> Persons:
+    persons = await person_service.get_page(page_num, page_size)
+    if not persons:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=PERSON_NOT_FOUND)
+
+    return persons
+
+
+@router.get('/search',
+            response_model=Persons,
+            summary='Full text search of persons.',
+            description='Return list of persons.')
+async def search_persons(
+        query: str,
+        page_num: int = Query(default=1, ge=1, alias='page[number]', description='Page number.'),
+        page_size: int = Query(default=50, ge=1, le=100, alias='page[size]', description='Page size.'),
+        person_service: PersonService = Depends(get_person_service),
+) -> Persons:
+    persons = await person_service.full_text_search(query, page_num, page_size)
+    if not persons:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=PERSON_NOT_FOUND)
+
+    return persons
+
+
+@router.get('/{person_id}/film/',
+            response_model=Movies,
+            summary='Movies by person',
+            description='Return list of movies where the person acted.')
+async def person_film(
+        person_id: str,
+        page_num: int = Query(default=1, ge=1, alias='page[number]', description='Page number.'),
+        page_size: int = Query(default=50, ge=1, le=100, alias='page[size]', description='Page size.'),
+        person_service: PersonService = Depends(get_person_service)
+) -> Movies:
+    person = await person_service.get_movies(person_id, page_num, page_size)
+    if not person:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=PERSON_NOT_FOUND)
+
+    return person
+
+
+@router.get('/{person_id}', response_model=Person)
+async def person_by_id(person_id: str, person_service: PersonService = Depends(get_person_service)) -> Person:
+    person = await person_service.get_document(person_id)
+    if not person:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=PERSON_NOT_FOUND)
+    return person

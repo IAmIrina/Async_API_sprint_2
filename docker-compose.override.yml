@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+
+  movies-admin:
+    volumes:
+      - static-data:/opt/app/static
+    depends_on:
+      - pg-db
+    entrypoint: ["/docker-entrypoint.sh"]
+  
+  sql-loader:
+    image: iamirina/sql_loader:latest
+    container_name: sql-loader.interconnect
+    env_file:
+       - .env
+    depends_on:
+      - movies-admin
+    networks:
+      - interconnect
+    entrypoint: ["/docker-entrypoint.sh"]
+
+  fastapi-movies:
+    volumes:
+      - ./fastapi_movies/src/:/home/runner/:ro
+    command: uvicorn main:app --reload --port $FAST_API_PORT --host 0.0.0.0
+
+

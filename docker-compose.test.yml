@@ -1,0 +1,49 @@
+version: '3.4'
+services:
+
+  fastapi-movies:
+    env_file:
+       - .env.test
+
+  functional-tests:
+      container_name: functional-tests.interconnect
+      build: tests/functional/
+      env_file:
+        - .env.test
+      depends_on:
+        - fastapi-movies
+      networks:
+        - interconnect
+  
+  test-elasticsearch:
+    image: docker.io/elastic/elasticsearch:7.7.0
+    container_name: test-elasticsearch.interconnect
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - test-esdata:/usr/share/elasticsearch/data
+    ports:
+      - 127.0.0.2:9200:9200
+    networks:
+      - interconnect
+    
+  test-cache:
+    image: redis:7.0.2-alpine
+    container_name: test-cache.interconnect
+    env_file:
+      - .env.test
+    restart: always
+    ports:
+      - 127.0.0.2:6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes: 
+      - test-redis-cash:/data
+    networks:
+      - interconnect
+
+volumes:
+  test-esdata: 
+    driver: local
+  test-redis-cash:
+    driver: local
+

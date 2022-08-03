@@ -1,0 +1,105 @@
+version: '3.4'
+
+services:
+  pg-db:
+    container_name: pg-db.interconnect
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - store-pg:/var/lib/postgresql/data
+    networks:
+      - interconnect
+      
+  movies-admin:
+    image: iamirina/movies_admin:latest
+    container_name: movies-admin.interconnect
+    env_file:
+       - .env
+    ports:
+      - 127.0.0.1:8000:8000
+    networks:
+      - interconnect
+
+  fastapi-movies:
+    container_name: fastapi-movies.interconnect
+    build: fastapi_movies/
+    env_file:
+       - .env
+    ports:
+      - 127.0.0.1:$FAST_API_PORT:$FAST_API_PORT
+    depends_on:
+      - elasticsearch
+      - cache
+    networks:
+      - interconnect
+
+  postgres-to-es:
+    container_name: postgres-to-es.interconnect
+    build: postgres_to_es/
+    env_file:
+       - .env
+    depends_on:
+      - elasticsearch
+    networks:
+      - interconnect
+
+  elasticsearch:
+    image: docker.io/elastic/elasticsearch:7.7.0
+    container_name: elasticsearch.interconnect
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - 127.0.0.1:9200:9200
+    networks:
+      - interconnect
+    
+  cache:
+    image: redis:7.0.2-alpine
+    container_name: cache.interconnect
+    restart: always
+    ports:
+      - 127.0.0.1:6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes: 
+      - redis-storage:/data
+    networks:
+      - interconnect
+
+  nginx:
+    image: nginx:stable
+    container_name: nginx.interconnect
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - static-data:/data/static:ro
+    ports:
+      - 80:80
+    depends_on:
+      - movies-admin
+      - fastapi-movies
+    networks:
+      - interconnect
+
+volumes:
+  static-data:
+    driver: local
+  esdata: 
+    driver: local
+  redis-storage:
+    driver: local
+  store-pg: 
+    driver: local
+
+networks:
+  interconnect:
+    driver: bridge
+  static-data:
+    driver: local
