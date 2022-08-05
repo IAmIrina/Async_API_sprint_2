@@ -1,7 +1,8 @@
 """Settings."""
-from pydantic import BaseModel, BaseSettings, Field
 import os
 from logging import config as logging_config
+
+from pydantic import BaseModel, BaseSettings, Field
 
 from core.logger import LOGGING
 

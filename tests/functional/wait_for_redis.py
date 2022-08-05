@@ -1,9 +1,9 @@
 """Wait for Redis is ready to accept connection."""
-from utils.backoff import backoff
-import aioredis
 import asyncio
 
+import aioredis
 from settings import test_settings
+from utils.backoff import backoff
 
 
 @backoff()

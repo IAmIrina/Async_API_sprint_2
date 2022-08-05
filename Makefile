@@ -28,5 +28,5 @@ destroy:
 stop:
 	docker-compose -f docker-compose.yml ${env} stop
 test:
-	docker-compose -f docker-compose.yml -f docker-compose.test.yml  up fastapi-movies test-elasticsearch test-cache functional-tests
+	docker-compose -f docker-compose.yml -f docker-compose.test.yml up --build fastapi-movies test-elasticsearch test-cache functional-tests
 

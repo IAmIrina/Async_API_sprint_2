@@ -1,8 +1,9 @@
 """Wait for Elastic Search is ready to accept connection."""
-from utils.backoff import backoff
-from elasticsearch import AsyncElasticsearch
 import asyncio
+
+from elasticsearch import AsyncElasticsearch
 from settings import test_settings
+from utils.backoff import backoff
 
 
 @backoff()

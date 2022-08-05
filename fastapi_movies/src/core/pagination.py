@@ -1,6 +1,7 @@
 """Implement Paginator class"""
-from typing import Any
 import math
+from typing import Any
+
 from models.custom_models import PaginationModel
 
 

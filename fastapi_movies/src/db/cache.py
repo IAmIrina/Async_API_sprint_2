@@ -1,21 +1,39 @@
-"""Implement Redis Cache."""
+"""Implement Cache."""
+import logging
 from abc import ABC, abstractmethod
 from functools import lru_cache
+from typing import Any, Optional
 
 import orjson
-import logging
 
-from typing import Any, Optional
-from aioredis import Redis
 from core.config import settings
 
 CACHE_EXPIRE_IN_SECONDS = settings.cache_expire_in_seconds
 
-redis: Optional[Redis] = None
+
+class AsyncCacheStorage(ABC):
+    @abstractmethod
+    async def get(self, key: str, **kwargs):
+        pass
+
+    @abstractmethod
+    async def set(self, key: str, value: str, expire: int, **kwargs):
+        pass
+
+    @abstractmethod
+    def close(self):
+        pass
+
+    @abstractmethod
+    async def wait_closed(self):
+        pass
 
 
-async def get_redis() -> Redis:
-    return redis
+cache: Optional[AsyncCacheStorage] = None
+
+
+async def get_cache() -> AsyncCacheStorage:
+    return cache
 
 
 class BaseCache(ABC):
@@ -28,20 +46,20 @@ class BaseCache(ABC):
         pass
 
     @abstractmethod
-    async def put(self, key, value):
+    async def set(self, key, value):
         pass
 
 
-class RedisCache(BaseCache):
+class Cache(BaseCache):
     """Implement cache storage interface."""
 
-    def __init__(self, redis, index):
+    def __init__(self, cache: AsyncCacheStorage, index: str):
         """Generate a name for key.
         Args:
-            index: Name elastic index.
-            redis: Redis pool.
+            index: Name index.
+            Cache: AsyncCacheStorage.
         """
-        self.redis = redis
+        self.cache = cache
         self.index = index
 
     @lru_cache()
@@ -53,7 +71,7 @@ class RedisCache(BaseCache):
             kwargs: Uses key/value to generate key string.
 
         Returs:
-            str: Redis key name.
+            str: Cache key name.
         """
         kwargs = dict(sorted(kwargs.items()))
         key_strings = [self.index]
@@ -62,19 +80,19 @@ class RedisCache(BaseCache):
         return '::'.join(key_strings)
 
     async def get(self, key) -> Any:
-        """Get data from Redis.
+        """Get data from Cache.
 
         Args:
-            kwargs: Key/value to calculate Redis key name.
+            kwargs: Key/value to calculate Cache key name.
 
         Returns:
-            Any: Any data from redis storage gotten by key name.
+            Any: Any data from cache gotten by key name.
 
         """
         try:
-            data = await self.redis.get(key)
+            data = await self.cache.get(key)
         except BaseException:
-            logging.exception('REDIS GET DATA ERROR')
+            logging.exception('Cache GET DATA ERROR')
             data = None
         if not data:
             logging.debug('No data in cache')
@@ -82,15 +100,15 @@ class RedisCache(BaseCache):
         logging.debug('Get data from cache done')
         return orjson.loads(data)
 
-    async def put(self, key, value):
-        """Save data to Redis.
+    async def set(self, key, value):
+        """Save data to Cache.
 
         Args:
-            value: The value will be saved to Redis Cache.
-            kwargs: Key/value to calculate Redis key name.
+            value: The value will be saved to Cache.
+            kwargs: Key/value to calculate Cache key name.
         """
         try:
-            await self.redis.set(key, value.json(), expire=CACHE_EXPIRE_IN_SECONDS)
+            await self.cache.set(key, value.json(), expire=CACHE_EXPIRE_IN_SECONDS)
         except BaseException:
-            logging.exception('REDIS SET DATA ERROR')
+            logging.exception('CACHE SET DATA ERROR')
         logging.debug('Success to Put data to cache')

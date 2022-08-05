@@ -1,13 +1,19 @@
-from typing import Optional
-import aiohttp
-import aioredis
 import asyncio
 from dataclasses import dataclass
-from elasticsearch import AsyncElasticsearch
-from multidict import CIMultiDictProxy
-import pytest_asyncio
+from typing import Optional
 
+import aiohttp
+import pytest_asyncio
+from multidict import CIMultiDictProxy
 from settings import test_settings
+
+pytest_plugins = [
+    "fixtures.db.es",
+    "fixtures.db.cache",
+    "fixtures.endpoints.films",
+    "fixtures.endpoints.genres",
+    "fixtures.endpoints.persons"
+]
 
 
 @dataclass
@@ -21,26 +27,6 @@ class HTTPResponse:
 def event_loop():
     """Override Event_loop for Session scope."""
     return asyncio.get_event_loop()
-
-
-@pytest_asyncio.fixture()
-async def clean_cache():
-    """Flush Redis DB."""
-    redis = aioredis.from_url(
-        f"redis://{test_settings.redis.host}:{test_settings.redis.port}",
-        password=test_settings.redis.password
-    )
-    await redis.flushdb()
-    yield redis
-    await redis.close()
-
-
-@pytest_asyncio.fixture(scope="session")
-async def es_client():
-    """ES connection."""
-    client = AsyncElasticsearch(hosts=[f'http://{test_settings.elastic.host}:{test_settings.elastic.port}'])
-    yield client
-    await client.close()
 
 
 @pytest_asyncio.fixture(scope="session")

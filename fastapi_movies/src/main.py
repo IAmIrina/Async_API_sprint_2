@@ -5,7 +5,7 @@ from fastapi.responses import ORJSONResponse
 
 from api.v1 import films, genres, persons
 from core.config import settings
-from db import elastic, redis
+from db import cache, search
 
 app = FastAPI(
     title=settings.project_name,
@@ -17,20 +17,20 @@ app = FastAPI(
 
 @app.on_event('startup')
 async def startup():
-    redis.redis = await aioredis.create_redis_pool(
+    cache.cache = await aioredis.create_redis_pool(
         (settings.redis.host, settings.redis.port),
         password=settings.redis.password,
         minsize=10,
         maxsize=20,
     )
-    elastic.es = AsyncElasticsearch(hosts=[f'http://{settings.elastic.host}:{settings.elastic.port}'])
+    search.searcher = AsyncElasticsearch(hosts=[f'http://{settings.elastic.host}:{settings.elastic.port}'])
 
 
 @app.on_event('shutdown')
 async def shutdown():
-    redis.redis.close()
-    await redis.redis.wait_closed()
-    await elastic.es.close()
+    cache.cache.close()
+    await cache.cache.wait_closed()
+    await search.searcher.close()
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
 app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])

@@ -1,75 +1,19 @@
 """Implement search in ES."""
 
-from abc import ABC, abstractmethod
-from typing import Optional, List, Tuple
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from typing import List, Tuple
+
+from elasticsearch import NotFoundError
+
+from db.search import AsyncSearchEngine, BaseSearchAdapter
 from models.custom_models import SortModel
 
-es: Optional[AsyncElasticsearch] = None
 
-
-async def get_elastic() -> AsyncElasticsearch:
-    """Return AsyncElasticsearch client of the module."""
-    return es
-
-
-class BaseSearcher(ABC):
-    @abstractmethod
-    async def fetch_one(self, uuid: str) -> dict:
-        pass
-
-    @abstractmethod
-    async def fetch_all(
-        self,
-        from_: int = 0,
-        size: int = 20,
-        sort: SortModel = None,
-    ) -> Tuple[List[dict], int]:
-        pass
-
-    @abstractmethod
-    async def full_text_search(
-        self,
-        query: dict,
-        fields: List[str],
-        from_: int = 0,
-        size: int = 20,
-    ) -> Tuple[List[dict], int]:
-        pass
-
-
-class BaseFilter(ABC):
-    @abstractmethod
-    async def exact_search_in_one_field(
-        self,
-        value: dict,
-        field: List[str],
-        from_: int = 0,
-        size: int = 20,
-        sort: SortModel = None,
-        _source: bool = True,
-    ) -> Tuple[List[dict], int]:
-        pass
-
-    @abstractmethod
-    async def exact_search_in_many_fields(
-        self,
-        value: dict,
-        fields: List[str],
-        from_: int = 0,
-        size: int = 20,
-        sort: SortModel = None,
-        _source: bool = True,
-    ) -> Tuple[List[dict], int]:
-        pass
-
-
-class ESSearcher(BaseSearcher, BaseFilter):
+class ESAdapter(BaseSearchAdapter):
     """Implement search interface."""
 
     FUZZINESS = 'AUTO'
 
-    def __init__(self, elastic: AsyncElasticsearch, index: str) -> None:
+    def __init__(self, elastic: AsyncSearchEngine, index: str) -> None:
         self.client = elastic
         self.index = index
 
@@ -287,3 +231,8 @@ class ESSearcher(BaseSearcher, BaseFilter):
         if sort:
             return [{sort.field: {'order': sort.order}}, '_score']
         return {}
+
+
+async def get_search_adapter() -> BaseSearchAdapter:
+    """Return ESAdapter class."""
+    return ESAdapter

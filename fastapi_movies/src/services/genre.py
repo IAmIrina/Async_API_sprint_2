@@ -3,27 +3,30 @@
 from functools import lru_cache
 from typing import Optional
 
-from aioredis import Redis
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from db.elastic import ESSearcher, get_elastic
-from db.redis import get_redis, RedisCache
-from core.pagination import Paginator
-from models.custom_models import SortModel
 
-from models.genre import Genre, Genres
 from core.config import settings
+from core.pagination import Paginator
+from db.cache import AsyncCacheStorage, Cache, get_cache
+from db.elastic import get_search_adapter
+from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
+from models.custom_models import SortModel
+from models.genre import Genre, Genres
 
 
 class GenreService:
     """Handle source genre data."""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch, index: str):
-        self.cache = RedisCache(redis, index)
+    def __init__(self,
+                 cache_storage: AsyncCacheStorage,
+                 search_engine: AsyncSearchEngine,
+                 search_adapter: BaseSearchAdapter,
+                 index: str):
+        self.cache = Cache(cache_storage, index)
 
         self.paginator = Paginator(Genres)
 
-        self.searcher = ESSearcher(elastic, index)
+        self.searcher = search_adapter(search_engine, index)
 
     async def get_document(self, uuid: str) -> Optional[Genre]:
         """Return genre by id from source."""
@@ -36,7 +39,7 @@ class GenreService:
                 return None
             genre = Genre(**genre)
 
-            await self.cache.put(key, genre)
+            await self.cache.set(key, genre)
         return genre
 
     async def get_page(self, page_num: int, page_size: int) -> Optional[Genres]:
@@ -58,14 +61,14 @@ class GenreService:
 
             genres = await self.paginator.paginate(genres, page_num, page_size, total_count)
 
-            await self.cache.put(key, genres)
+            await self.cache.set(key, genres)
         return genres
 
 
 @lru_cache()
 def get_genre_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+    cache: AsyncCacheStorage = Depends(get_cache),
+    search_engine: AsyncSearchEngine = Depends(get_search_engine),
+    search_adapter: AsyncSearchEngine = Depends(get_search_adapter),
 ) -> GenreService:
-
-    return GenreService(redis, elastic, settings.genres.index_name)
+    return GenreService(cache, search_engine, search_adapter, settings.genres.index_name)

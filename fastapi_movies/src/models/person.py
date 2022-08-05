@@ -1,6 +1,7 @@
 """Endpoint persons pydantic models."""
 
 from typing import List, Optional
+
 from pydantic import validator
 
 from models.custom_models import OrjsonModel, PaginationModel
