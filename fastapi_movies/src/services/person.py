@@ -4,12 +4,12 @@ import logging
 from functools import lru_cache
 from typing import Optional
 
-from aioredis import Redis
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 
-from db.elastic import get_elastic, ESSearcher
-from db.redis import get_redis, RedisCache
+from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
+from db.elastic import get_search_adapter
+
+from db.cache import get_cache, Cache, AsyncCacheStorage
 from core.pagination import Paginator
 
 from models.custom_models import SortModel
@@ -20,14 +20,20 @@ from core.config import settings
 class PersonService:
     """Handle source person data."""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch, index: str, movies_idx: str):
-        self.cache = RedisCache(redis, index)
+    def __init__(self,
+                 cache_storage: AsyncCacheStorage,
+                 search_engine: AsyncSearchEngine,
+                 search_adapter: BaseSearchAdapter,
+                 index: str,
+                 movies_idx: str
+                 ):
+        self.cache = Cache(cache_storage, index)
 
         self.person_paginator = Paginator(Persons)
         self.movie_paginator = Paginator(Movies)
 
-        self.searcher = ESSearcher(elastic, index)
-        self.movie_searcher = ESSearcher(elastic, movies_idx)
+        self.searcher = search_adapter(search_engine, index)
+        self.movie_searcher = search_adapter(search_engine, movies_idx)
 
     async def get_document(self, uuid: str) -> Optional[Person]:
         """Return person by uuid from source. """
@@ -40,7 +46,7 @@ class PersonService:
                 return None
             person['role'] = await self._get_roles(uuid)
             person = Person(**person)
-            await self.cache.put(key, person)
+            await self.cache.set(key, person)
         return person
 
     async def get_page(
@@ -66,7 +72,7 @@ class PersonService:
             for person in persons:
                 person['role'] = await self._get_roles(person['uuid'])
             persons = await self.person_paginator.paginate(persons, page_num, page_size, total_count)
-            await self.cache.put(
+            await self.cache.set(
                 key,
                 value=persons,
             )
@@ -102,7 +108,7 @@ class PersonService:
 
             persons = await self.person_paginator.paginate(persons, page_num, page_size, total_count)
 
-            await self.cache.put(key, persons)
+            await self.cache.set(key, persons)
         return persons
 
     async def _get_roles(self, person_id):
@@ -141,7 +147,7 @@ class PersonService:
 
             movies = await self.movie_paginator.paginate(movies, page_num, page_size, total_count)
 
-            await self.cache.put(key, movies)
+            await self.cache.set(key, movies)
 
         return movies
 
@@ -159,8 +165,15 @@ class PersonService:
 
 @ lru_cache()
 def get_person_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+    cache: AsyncCacheStorage = Depends(get_cache),
+    search_engine: AsyncSearchEngine = Depends(get_search_engine),
+    search_adapter: AsyncSearchEngine = Depends(get_search_adapter),
 ) -> PersonService:
 
-    return PersonService(redis, elastic, settings.persons.index_name, settings.movies.index_name)
+    return PersonService(
+        cache,
+        search_engine,
+        search_adapter,
+        settings.persons.index_name,
+        settings.movies.index_name
+    )
