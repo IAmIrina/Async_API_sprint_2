@@ -5,15 +5,13 @@ from typing import Optional
 
 from fastapi import Depends
 
-from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
-from db.elastic import get_search_adapter
-
-from db.cache import get_cache, Cache, AsyncCacheStorage
-from core.pagination import Paginator
-from models.custom_models import SortModel
-
-from models.genre import Genre, Genres
 from core.config import settings
+from core.pagination import Paginator
+from db.cache import AsyncCacheStorage, Cache, get_cache
+from db.elastic import get_search_adapter
+from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
+from models.custom_models import SortModel
+from models.genre import Genre, Genres
 
 
 class GenreService:

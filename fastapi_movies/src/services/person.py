@@ -1,20 +1,17 @@
 """Persons views"""
 import logging
-
 from functools import lru_cache
 from typing import Optional
 
 from fastapi import Depends
 
-from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
-from db.elastic import get_search_adapter
-
-from db.cache import get_cache, Cache, AsyncCacheStorage
-from core.pagination import Paginator
-
-from models.custom_models import SortModel
-from models.person import Person, Persons, ActedIn, Movies
 from core.config import settings
+from core.pagination import Paginator
+from db.cache import AsyncCacheStorage, Cache, get_cache
+from db.elastic import get_search_adapter
+from db.search import AsyncSearchEngine, BaseSearchAdapter, get_search_engine
+from models.custom_models import SortModel
+from models.person import ActedIn, Movies, Person, Persons
 
 
 class PersonService:

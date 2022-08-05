@@ -1,13 +1,13 @@
 """Route films."""
-from http import HTTPStatus
-from fastapi import APIRouter, Depends, HTTPException, Query
 from enum import Enum
+from http import HTTPStatus
 
-from services.film import FilmService, get_film_service
-from models.film import Films, Film
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from core.messages import FILM_NOT_FOUND
-from models.custom_models import SortModel, PaginateParams
-
+from models.custom_models import PaginateParams, SortModel
+from models.film import Film, Films
+from services.film import FilmService, get_film_service
 
 router = APIRouter()
 

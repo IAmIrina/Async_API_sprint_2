@@ -1,6 +1,7 @@
 """Abstract AsyncSearchEngine and BaseSearchAdapter classes"""
-from typing import Optional, List, Tuple
 from abc import ABC, abstractmethod
+from typing import List, Optional, Tuple
+
 from models.custom_models import SortModel
 
 

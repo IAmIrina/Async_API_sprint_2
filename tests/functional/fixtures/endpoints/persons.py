@@ -1,9 +1,10 @@
 """Persons API endpoint fictures."""
+from http import HTTPStatus
 from typing import List
+
 import pytest_asyncio
 from testdata import es_persons, es_schema, schemas
 from utils.converters import to_es_bulk_format
-from http import HTTPStatus
 
 
 @pytest_asyncio.fixture(scope="module")

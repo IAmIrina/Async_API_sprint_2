@@ -1,8 +1,9 @@
 """Films  API endpoint fixtures."""
+from http import HTTPStatus
+
 import pytest_asyncio
 from testdata import es_movies, es_schema
 from utils.converters import to_es_bulk_format
-from http import HTTPStatus
 
 
 @pytest_asyncio.fixture(scope="module")

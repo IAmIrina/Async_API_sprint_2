@@ -1,11 +1,11 @@
 """Implement search in ES."""
 
 from typing import List, Tuple
-from elasticsearch import NotFoundError
-from models.custom_models import SortModel
 
+from elasticsearch import NotFoundError
 
 from db.search import AsyncSearchEngine, BaseSearchAdapter
+from models.custom_models import SortModel
 
 
 class ESAdapter(BaseSearchAdapter):

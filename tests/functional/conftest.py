@@ -1,10 +1,10 @@
-from typing import Optional
-import aiohttp
 import asyncio
 from dataclasses import dataclass
-from multidict import CIMultiDictProxy
-import pytest_asyncio
+from typing import Optional
 
+import aiohttp
+import pytest_asyncio
+from multidict import CIMultiDictProxy
 from settings import test_settings
 
 pytest_plugins = [

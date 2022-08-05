@@ -1,8 +1,9 @@
 """Film  API endpoint tests."""
 import json
+from http import HTTPStatus
+
 import pytest
 from testdata import schemas
-from http import HTTPStatus
 
 ENDPOINT = '/films'
 

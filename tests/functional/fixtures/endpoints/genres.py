@@ -1,8 +1,9 @@
 """Genres  API endpoint fixtures."""
+from http import HTTPStatus
+
 import pytest_asyncio
 from testdata import es_genres, es_schema
 from utils.converters import to_es_bulk_format
-from http import HTTPStatus
 
 ENDPOINT = '/genres'
 

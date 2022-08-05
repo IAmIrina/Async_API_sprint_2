@@ -2,7 +2,6 @@
 """Cache fixtures."""
 import aioredis
 import pytest_asyncio
-
 from settings import test_settings
 
 

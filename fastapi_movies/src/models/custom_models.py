@@ -1,10 +1,11 @@
 """Mixins pydantic models."""
 
+from typing import Generic, List, Literal, Optional, TypeVar
+
 import orjson
-from typing import Generic, List, TypeVar, Literal, Optional
+from fastapi import Query
 from pydantic import BaseModel
 from pydantic.generics import GenericModel
-from fastapi import Query
 
 Model = TypeVar("Model", bound=BaseModel)
 

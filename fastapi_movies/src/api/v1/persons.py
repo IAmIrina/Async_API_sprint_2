@@ -1,11 +1,12 @@
 """Route persons."""
 from http import HTTPStatus
+
 from fastapi import APIRouter, Depends, HTTPException
 
-from services.person import PersonService, get_person_service
-from models.person import Person, Persons, Movies
 from core.messages import PERSON_NOT_FOUND
 from models.custom_models import PaginateParams
+from models.person import Movies, Person, Persons
+from services.person import PersonService, get_person_service
 
 router = APIRouter()
 

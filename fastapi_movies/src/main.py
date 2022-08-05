@@ -5,7 +5,7 @@ from fastapi.responses import ORJSONResponse
 
 from api.v1 import films, genres, persons
 from core.config import settings
-from db import search, cache
+from db import cache, search
 
 app = FastAPI(
     title=settings.project_name,
