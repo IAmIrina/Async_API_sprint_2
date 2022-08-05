@@ -1,41 +1,19 @@
 """Film  API endpoint tests."""
 import json
 import pytest
-import pytest_asyncio
-from testdata import es_movies, es_schema, schemas
-from utils.converters import to_es_bulk_format
-
+from testdata import schemas
+from http import HTTPStatus
 
 ENDPOINT = '/films'
 
 
-@pytest_asyncio.fixture(scope="module")
-async def es_documents(es_client):
-    """Fixture to manage elastic index."""
-
-    await es_client.indices.create(
-        index=es_schema.movies['index_name'],
-        body=es_schema.movies['schema'],
-        ignore=[400, 404]
-    )
-
-    await es_client.bulk(
-        index=es_schema.movies['index_name'],
-        body=await to_es_bulk_format(es_schema.movies['index_name'], es_movies.documents),
-        refresh='wait_for',
-    )
-    yield es_movies.documents
-
-    await es_client.indices.delete(index=es_schema.movies['index_name'], ignore=[400, 404])
-
-
 @pytest.mark.asyncio
-async def test_get_by_uuid(make_get_request, es_documents, clean_cache):
+async def test_get_by_uuid(make_get_request, test_films, clean_cache):
     """Get film by UUID."""
-    uuid = es_documents[3]['uuid']
-    expected = schemas.Film(**es_documents[3]).dict()
+    uuid = test_films[3]['uuid']
+    expected = schemas.Film(**test_films[3]).dict()
     response = await make_get_request(ENDPOINT + '/' + uuid)
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body == expected
 
 
@@ -47,7 +25,7 @@ async def test_get_by_uuid(make_get_request, es_documents, clean_cache):
                              (-4, -2),
                          ]
                          )
-async def test_page_validation(page_num, page_size, make_get_request, es_documents, clean_cache):
+async def test_page_validation(page_num, page_size, make_get_request, test_films, clean_cache):
     """Failed validation."""
 
     params = {
@@ -60,7 +38,7 @@ async def test_page_validation(page_num, page_size, make_get_request, es_documen
 
 
 @pytest.mark.asyncio
-async def test_sort_validation(make_get_request, es_documents, clean_cache):
+async def test_sort_validation(make_get_request, test_films, clean_cache):
     """Failed validation."""
 
     params = {
@@ -72,11 +50,11 @@ async def test_sort_validation(make_get_request, es_documents, clean_cache):
 
 
 @pytest.mark.asyncio
-async def test_uuid_doesnt_exists(make_get_request, es_documents, clean_cache):
+async def test_uuid_doesnt_exists(make_get_request, test_films, clean_cache):
     """GET film by UUID, if it doen't exist."""
     uuid = "Does_not_exist"
     response = await make_get_request(ENDPOINT + '/' + uuid)
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -86,13 +64,13 @@ async def test_uuid_doesnt_exists(make_get_request, es_documents, clean_cache):
                              ('imdb_rating', False),
                          ]
                          )
-async def test_get_all_sort(sort, asc, make_get_request, es_documents, clean_cache):
+async def test_get_all_sort(sort, asc, make_get_request, test_films, clean_cache):
     """Get ALL. Sort."""
     expected = schemas.Films(
         total_pages=1,
         page_num=1,
         page_size=50,
-        data=sorted(es_documents, key=lambda d: d['imdb_rating'], reverse=asc)
+        data=sorted(test_films, key=lambda d: d['imdb_rating'], reverse=asc)
     ).dict()
     response = await make_get_request(
         ENDPOINT,
@@ -100,7 +78,7 @@ async def test_get_all_sort(sort, asc, make_get_request, es_documents, clean_cac
             'sort': sort,
         }
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body['total_pages'] == expected['total_pages']
     assert response.body['page_num'] == expected['page_num']
     assert response.body['page_size'] == expected['page_size']
@@ -109,14 +87,14 @@ async def test_get_all_sort(sort, asc, make_get_request, es_documents, clean_cac
 
 
 @pytest.mark.asyncio
-async def test_pagination(make_get_request, es_documents, clean_cache):
+async def test_pagination(make_get_request, test_films, clean_cache):
     """Pagination. Get page number N."""
 
     expected = schemas.Films(
         total_pages=5,
         page_num=3,
         page_size=2,
-        data=sorted(es_documents, key=lambda d: d['imdb_rating'], reverse=True)[4:6]
+        data=sorted(test_films, key=lambda d: d['imdb_rating'], reverse=True)[4:6]
     ).dict()
 
     response = await make_get_request(
@@ -127,7 +105,7 @@ async def test_pagination(make_get_request, es_documents, clean_cache):
         }
     )
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body['total_pages'] == expected['total_pages']
     assert response.body['page_num'] == expected['page_num']
     assert response.body['page_size'] == expected['page_size']
@@ -136,11 +114,11 @@ async def test_pagination(make_get_request, es_documents, clean_cache):
 
 
 @pytest.mark.asyncio
-async def test_filter_genre(make_get_request, es_documents, clean_cache):
+async def test_filter_genre(make_get_request, test_films, clean_cache):
     """Filter by genre."""
     genre_uuid = '6a0a479b-cfec-41ac-b520-41b2b007b611'
     expected = list(
-        filter(lambda item: any(genre['uuid'] == genre_uuid for genre in item['genre']), es_documents)
+        filter(lambda item: any(genre['uuid'] == genre_uuid for genre in item['genre']), test_films)
     )
     expected = sorted(expected, key=lambda d: d['imdb_rating'], reverse=True)
 
@@ -150,12 +128,12 @@ async def test_filter_genre(make_get_request, es_documents, clean_cache):
             'filter[genre]': genre_uuid
         }
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body['data']) == len(expected)
 
 
 @pytest.mark.asyncio
-async def test_filter_genre_doesnt_exist(make_get_request, es_documents, clean_cache):
+async def test_filter_genre_doesnt_exist(make_get_request, test_films, clean_cache):
     """Filter by genre."""
     genre_uuid = 'does_not_exist'
 
@@ -165,7 +143,7 @@ async def test_filter_genre_doesnt_exist(make_get_request, es_documents, clean_c
             'filter[genre]': genre_uuid
         }
     )
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -175,7 +153,7 @@ async def test_filter_genre_doesnt_exist(make_get_request, es_documents, clean_c
                              (4, 100),
                          ]
                          )
-async def test_cache(page_num, page_size, make_get_request, es_documents, clean_cache):
+async def test_cache(page_num, page_size, make_get_request, test_films, clean_cache):
     """Cache. Get page number N twice."""
 
     params = {
@@ -192,13 +170,13 @@ async def test_cache(page_num, page_size, make_get_request, es_documents, clean_
 @pytest.mark.asyncio
 @pytest.mark.parametrize("query, code, count",
                          [
-                             ('Empire', 200, 1),
-                             ('Obi', 200, 4),
-                             ('Sttar', 200, 10),
-                             ('NotEXIST', 404, 0),
+                             ('Empire', HTTPStatus.OK, 1),
+                             ('Obi', HTTPStatus.OK, 4),
+                             ('Sttar', HTTPStatus.OK, 10),
+                             ('NotEXIST', HTTPStatus.NOT_FOUND, 0),
                          ]
                          )
-async def test_full_search(query, code, count, make_get_request, es_documents, clean_cache):
+async def test_full_search(query, code, count, make_get_request, test_films, clean_cache):
     """Full Text search."""
     params = {
         'query': query
@@ -206,15 +184,15 @@ async def test_full_search(query, code, count, make_get_request, es_documents, c
     response = await make_get_request(ENDPOINT + '/search', params=params)
 
     assert response.status == code
-    if code == 200:
+    if code == HTTPStatus.OK:
         assert len(response.body['data']) == count
 
 
 @pytest.mark.asyncio
-async def test_get_from_redis(make_get_request, es_documents, clean_cache):
+async def test_get_from_redis(make_get_request, test_films, clean_cache):
     """Cache. Compare with cached Redis Data."""
 
-    expected = schemas.Film(**es_documents[1]).dict()
+    expected = schemas.Film(**test_films[1]).dict()
     uuid = expected['uuid']
     response = await make_get_request(ENDPOINT + '/' + uuid)
 
@@ -224,5 +202,5 @@ async def test_get_from_redis(make_get_request, es_documents, clean_cache):
     if cache:
         cache = schemas.Film(**cache)
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert cache == expected
