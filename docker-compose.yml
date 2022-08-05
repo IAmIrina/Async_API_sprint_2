@@ -101,5 +101,3 @@ volumes:
 networks:
   interconnect:
     driver: bridge
-  static-data:
-    driver: local
