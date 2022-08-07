@@ -35,7 +35,7 @@ async def test_page_validation(page_num, page_size, make_get_request, test_films
     }
     response_es = await make_get_request(ENDPOINT, params=params)
 
-    assert response_es.status == 422
+    assert response_es.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 @pytest.mark.asyncio
@@ -47,7 +47,7 @@ async def test_sort_validation(make_get_request, test_films, clean_cache):
     }
     response_es = await make_get_request(ENDPOINT, params=params)
 
-    assert response_es.status == 422
+    assert response_es.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 @pytest.mark.asyncio
