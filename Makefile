@@ -1,6 +1,3 @@
-include ./.env
-env = --env-file ./.env
-
 help:
 	@echo "usage: make <target>"
 	@echo "Targets:"
@@ -11,22 +8,26 @@ help:
 	@echo "	down"
 	@echo "	destroy"
 	@echo "	stop"
+	@echo "	up_dev"
 	@echo "	test"
 
+
 build:
-	docker-compose -f docker-compose.yml ${env} build
+	docker-compose -f docker-compose.yml  build
 up_detach:
-	docker-compose -f docker-compose.yml ${env} up -d
+	docker-compose -f docker-compose.yml  up -d
 up:
-	docker-compose -f docker-compose.yml ${env} up
+	docker-compose -f docker-compose.yml  up
 start:
-	docker-compose -f docker-compose.yml ${env} start
+	docker-compose -f docker-compose.yml  start
 down:
-	docker-compose -f docker-compose.yml ${env} down
+	docker-compose -f docker-compose.yml  down
 destroy:
-	docker-compose -f docker-compose.yml ${env} down -v
+	docker-compose -f docker-compose.yml  down -v
 stop:
-	docker-compose -f docker-compose.yml ${env} stop
+	docker-compose -f docker-compose.yml  stop
+dev:
+	docker-compose -f docker-compose.yml -f docker-compose-dev.yml up --build
 test:
-	docker-compose -f docker-compose.yml -f docker-compose.test.yml up --build fastapi-movies test-elasticsearch test-cache functional-tests
+	docker-compose -f docker-compose.yml -f docker-compose-test.yml up --build fastapi-movies test-elasticsearch test-cache functional-tests
 
