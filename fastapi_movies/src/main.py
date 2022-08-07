@@ -9,6 +9,8 @@ from db import cache, search
 
 app = FastAPI(
     title=settings.project_name,
+    version=settings.version,
+    description=settings.description,
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,

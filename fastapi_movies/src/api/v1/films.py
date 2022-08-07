@@ -20,7 +20,7 @@ class SortingImdbRating(str, Enum):
 @router.get('/',
             response_model=Films,
             summary="Get movies.",
-            description="Return list of films, filter by genre can be used.")
+            description="Return list of movies: sort, pagination and filter by genre can be used.")
 async def films(
     film_service: FilmService = Depends(get_film_service),
     sort: SortingImdbRating = Query(default=SortingImdbRating.desc,
@@ -29,7 +29,7 @@ async def films(
     filter: str = Query(
         default=None,
         alias='filter[genre]',
-        description='Use genre uuid.'),
+        description='Use genre uuid to filter movies by genre.'),
 
 ) -> Films:
     if sort.__dict__['_name_']:

@@ -28,7 +28,9 @@ class ElasticSettings(BaseSettings):
 
 class Settings(BaseSettings):
     """Project settings."""
-    project_name = 'movies'
+    project_name = 'Read-only Async Online Cinema API'
+    version = '1.0.0'
+    description = 'Information about movies and also genres and persons who took apart in the movies.'
     redis: RedisSettings = RedisSettings()
     elastic: ElasticSettings = ElasticSettings()
 

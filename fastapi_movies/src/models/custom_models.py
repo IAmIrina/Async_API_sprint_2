@@ -37,7 +37,7 @@ class PaginateParams:
             50, alias='page[size]', description='Items amount on page', ge=1
         ),
         page_number: Optional[int] = Query(
-            1, alias='page[number]', description='Page number for pagination', ge=1
+            1, alias='page[number]', description='Page number', ge=1
         ),
     ):
         self.page_num = page_number
