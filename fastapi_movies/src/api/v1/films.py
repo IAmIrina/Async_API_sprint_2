@@ -2,9 +2,9 @@
 from enum import Enum
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
 from core.messages import FILM_NOT_FOUND
+from core.security import check_permission
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from models.custom_models import PaginateParams, SortModel
 from models.film import Film, Films
 from services.film import FilmService, get_film_service
@@ -57,7 +57,12 @@ async def films_search(
 
 
 @router.get('/{film_id}', response_model=Film, summary='Get movie by uuid', description='Return movie details.')
-async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
+@check_permission
+async def film_details(
+        request: Request,
+        film_id: str,
+        film_service: FilmService = Depends(get_film_service),
+) -> Film:
     film = await film_service.get_document(film_id)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=FILM_NOT_FOUND)
