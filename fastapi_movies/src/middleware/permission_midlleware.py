@@ -13,7 +13,7 @@ class PermissionMiddleware(BaseHTTPMiddleware):
         access_token = request.headers.get('Authorization')
         if access_token:
             permission, status = await UserPermission().check_user_permission(access_token)
-            if status != HTTPStatus.OK:
+            if status == HTTPStatus.UNAUTHORIZED:
                 return JSONResponse(status_code=status, content=permission)
         else:
             permission = anonymous
