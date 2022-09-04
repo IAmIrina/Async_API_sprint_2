@@ -33,13 +33,17 @@ class Settings(BaseSettings):
     description = 'Information about movies and also genres and persons who took apart in the movies.'
     redis: RedisSettings = RedisSettings()
     elastic: ElasticSettings = ElasticSettings()
-
+    secret_key: str = Field(env='SECRET_KEY')
+    check_role_url: str = Field(env='CHECK_ROLE_URL')
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cache_expire_in_seconds = 15
 
     persons: ESIndex = ESIndex(index_name='persons')
     movies: ESIndex = ESIndex(index_name='movies')
     genres: ESIndex = ESIndex(index_name='genres')
+
+    class Config:
+        env_file = '.env'
 
 
 settings = Settings()

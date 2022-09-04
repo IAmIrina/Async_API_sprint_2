@@ -1,3 +1,4 @@
+import aiohttp
 import aioredis
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -6,6 +7,8 @@ from fastapi.responses import ORJSONResponse
 from api.v1 import films, genres, persons
 from core.config import settings
 from db import cache, search
+from middleware.permission_midlleware import PermissionMiddleware
+from utils import session
 
 app = FastAPI(
     title=settings.project_name,
@@ -26,6 +29,7 @@ async def startup():
         maxsize=20,
     )
     search.searcher = AsyncElasticsearch(hosts=[f'http://{settings.elastic.host}:{settings.elastic.port}'])
+    session.session = aiohttp.ClientSession()
 
 
 @app.on_event('shutdown')
@@ -33,6 +37,9 @@ async def shutdown():
     cache.cache.close()
     await cache.cache.wait_closed()
     await search.searcher.close()
+    await session.session.close()
+
+app.add_middleware(PermissionMiddleware)
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
 app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
