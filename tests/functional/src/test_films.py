@@ -13,9 +13,18 @@ async def test_get_by_uuid(make_get_request, test_films, clean_cache):
     """Get film by UUID."""
     uuid = test_films[3]['uuid']
     expected = schemas.Film(**test_films[3]).dict()
-    response = await make_get_request(ENDPOINT + '/' + uuid)
+    response = await make_get_request(ENDPOINT + '/' + uuid, headers={'Authorization': 'Bearer access-token'})
     assert response.status == HTTPStatus.OK
     assert response.body == expected
+
+
+@pytest.mark.asyncio
+async def test_get_by_uuid(make_get_request, test_films, clean_cache):
+    """Get film by UUID not Authorized user."""
+    uuid = test_films[3]['uuid']
+    expected = schemas.Film(**test_films[3]).dict()
+    response = await make_get_request(ENDPOINT + '/' + uuid)
+    assert response.status == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.asyncio
@@ -54,7 +63,7 @@ async def test_sort_validation(make_get_request, test_films, clean_cache):
 async def test_uuid_doesnt_exists(make_get_request, test_films, clean_cache):
     """GET film by UUID, if it doen't exist."""
     uuid = "Does_not_exist"
-    response = await make_get_request(ENDPOINT + '/' + uuid)
+    response = await make_get_request(ENDPOINT + '/' + uuid, headers={'Authorization': 'Bearer access-token'})
     assert response.status == HTTPStatus.NOT_FOUND
 
 
@@ -195,7 +204,7 @@ async def test_get_from_redis(make_get_request, test_films, clean_cache):
 
     expected = schemas.Film(**test_films[1]).dict()
     uuid = expected['uuid']
-    response = await make_get_request(ENDPOINT + '/' + uuid)
+    response = await make_get_request(ENDPOINT + '/' + uuid, headers={'Authorization': 'Bearer access-token'})
 
     from_cache = await clean_cache.get(f'movies::uuid::{uuid}')
 
