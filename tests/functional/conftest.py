@@ -5,7 +5,13 @@ from typing import Optional
 import aiohttp
 import pytest_asyncio
 from multidict import CIMultiDictProxy
+
+
 from settings import test_settings
+from utils.mock_auth_server import start_auth_mock_server
+
+
+start_auth_mock_server('0.0.0.0', 6001)
 
 pytest_plugins = [
     "fixtures.db.es",
@@ -40,9 +46,10 @@ async def session():
 @pytest_asyncio.fixture(scope="session")
 def make_get_request(session):
     """Make HTTP request with AIOHTTP session."""
-    async def inner(method: str, params: Optional[dict] = {}) -> HTTPResponse:
+    async def inner(method: str, params: Optional[dict] = {}, headers: Optional[dict] = {}) -> HTTPResponse:
         url = test_settings.api_url + method
-        async with session.get(url, params=params) as response:
+        headers = {'Content-Type': 'application/json', **headers}
+        async with session.get(url, params=params, headers=headers) as response:
             return HTTPResponse(
                 body=await response.json(),
                 headers=response.headers,

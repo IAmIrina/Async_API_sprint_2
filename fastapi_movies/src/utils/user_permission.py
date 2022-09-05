@@ -1,5 +1,6 @@
 import json
 from http import HTTPStatus
+import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
 from core.config import settings
@@ -23,7 +24,7 @@ class UserPermission:
                     response_data = await response.json()
                     return response_data, response.status
             except ClientConnectorError:
-                continue
+                logging.exception('Error to get data from Auth Api.')
         return anonymous, HTTPStatus.BAD_GATEWAY
 
     def _split_user_token(self, authorization: str) -> str:
