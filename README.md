@@ -1,66 +1,67 @@
-# Проект: Асинхронный Read-only API для кинотеатра. 
+# Project work: "Async Read-Only API for Online Cinema".
 
-Является точкой входа для всех клиентов. 
+API to search Online cinema content. Entry point for clients.
 
-## Используемые технологии
-- Протокол REST API
-- Код приложения на Python + FastAPI.
-- Приложение запускается под управлением сервера ASGI(guvicorn).
-- В качестве хранилища используется ElasticSearch.
-- Для кеширования используется Redis.
-- Для функционального тестирования используется pytest
-- Все компоненты системы запускаются через Docker: Elastic Search, Redix, Nginx.
 
-## Ссылка на репозиторий
+## Stack
+- REST API
+- Python + FastAPI
+- ASGI(guvicorn)
+- ElasticSearch
+- Redis for caсhe
+- pytest
+- Docker
 
-[IAmIrina](https://github.com/IAmIrina/Async_API_sprint_2.git)
+Docker-compose.yaml to run all components: Elastic Search, Redis, Nginx.
 
-## Внешняя Swager Документация
+
+## API documentation
 
 [Swagger](http://127.0.0.1/api/openapi)
 
+
 ## Style guide
-Минимум, который необходимо соблюдать:
-- [PEP8](https://peps.python.org/pep-0008/)  +  [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
+- [PEP8](https://peps.python.org/pep-0008/)  +  [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
 
 
-## Инструкция по разворачиванию сервиса
+## Deploy
 
-Склонировать репозиторий
+Clone repo:
 ```
 git clone git@github.com:snesterkov/Async_API_sprint_1.git
 ```
-Скопировать файл:  
+Copy file:
 ```
 cp .env.example .env
 ```
-Отредактировать переменные окружения в файле .env любимым редактором. 
+Edit .env file.
 
-### Развернуть сервис в режиме DEV
+### DEV Deploy
 ```
 sudo make dev
 ```
-В режими DEV запускается:
-- API под управлением сервера ASGI Uvicorn с отслеживаем изменений в исходном коде.
-- Сервис переноса данных из SQLite (sql-loader)
+In DEV mode:
+- API under ASGI Uvicorn with tracking of changes in the source code
+- Migration of a movie database from SQLite (sql-loader) to Postgres
 
-### Развернуть сервис в режиме PROD
+### PROD Deploy
 ```
 sudo make up
 ```
-или в detach режиме
+or detach mode
 ```
 sudo make up_detach
 ```
 
-### Запустить тесты
+### Run tests
 ```
 sudo make test
 ```
-В тестах поднимается тестовые инстансы Elastic Search и Redis.
+Elastic Search and Redis test instances are being raised in the tests.
 
-Тесты составлены для всех endpoints:
-- граничные случаи по валидации данных;
-- пагинация данных;
-- полнотекстовый поиск;
-- поиск с учётом кеша в Redis (проверка запрошенных данных напрямую в Redis).
+
+Tests are compiled for all endpoints:
+- boundary cases on data validation;
+- pagination of data;
+- full-text search;
+- cache-aware search in Redis (checking the requested data directly in Redis).
